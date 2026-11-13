@@ -1,0 +1,353 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: uid
+    // Fields:
+    //   - uid: string (required)
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - birthday: string
+    //   - role: string (Membro, Líder, Admin)
+    //   - photo: string (uri)
+    //   - communityId: string (required)
+    //   - lastSeen: timestamp
+    //   - status: string
+    //   - bio: string
+    //
+    // Collection: communities
+    // Document ID: communityId
+    // Fields:
+    //   - name: string
+    //   - logo: string (uri)
+    //   - primaryColor: string
+    //   - secondaryColor: string
+    //   - leaderUid: string
+    //   - planId: string (free, premium, enterprise)
+    //   - networkId: string
+    //   - subscriptionStatus: string
+    //
+    // Collection: networks
+    // Document ID: networkId
+    // Fields:
+    //   - name: string
+    //   - adminUid: string
+    //   - communities: list
+    //
+    // Collection: global_challenges
+    // Document ID: challengeId
+    // Fields:
+    //   - title: string
+    //   - networkId: string
+    //
+    // [Subcollections under communities/{communityId}]
+    // - public_messages
+    // - private_messages
+    // - devocionais
+    // - agenda_events
+    // - posts
+    //
+    // ===============================================================
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.targetUid == request.auth.uid;
+      allow create: if isAuthenticated(); // In a real app, this would be more restricted
+      allow update: if isAuthenticated() && resource.data.targetUid == request.auth.uid 
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isAuthenticated() && resource.data.targetUid == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'SuperAdmin' ||
+          (request.auth.token.email == "wagnergoisoficial@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Admin', 'Dono', 'SuperAdmin'] ||
+          (request.auth.token.email == "wagnergoisoficial@gmail.com" && request.auth.token.email_verified == true));
+    }
+    
+    function isLeader() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['leader', 'regente', 'tesoureiro', 'secretaria', 'admin', 'Dono', 'SuperAdmin', 'Lider', 'Admin']);
+    }
+
+    function isRegente() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['regente', 'admin', 'Dono', 'SuperAdmin']);
+    }
+
+    function isTesoureiro() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['tesoureiro', 'admin', 'Dono', 'SuperAdmin']);
+    }
+
+    function isSecretaria() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['secretaria', 'admin', 'Dono', 'SuperAdmin']);
+    }
+
+    function isMemberOf(communityId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.communityId == communityId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() < 128 &&
+             data.email is string && data.email.size() < 128 &&
+             data.name is string && data.name.size() < 100 &&
+             data.communityId is string && data.communityId.size() < 128 &&
+             data.role in ['member', 'leader', 'regente', 'tesoureiro', 'secretaria', 'admin', 'Membro', 'Lider', 'Admin', 'Dono', 'SuperAdmin'] &&
+             (!('status' in data) || data.status in ['Ativo', 'Inativo']) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 30)) &&
+             (!('address' in data) || (data.address is string && data.address.size() < 250)) &&
+             (!('baptismDate' in data) || (data.baptismDate is string && data.baptismDate.size() < 20)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() < 1000)) &&
+             (!('level' in data) || data.level is int) &&
+             (!('experience' in data) || data.experience is int) &&
+             (!('streak' in data) || data.streak is int) &&
+             (!('badges' in data) || data.badges is list) &&
+             (!('contributions' in data) || data.contributions is map);
+    }
+
+    function isValidRitual(data) {
+      return data.type in ['daily', 'weekly'] &&
+             data.title is string && data.title.size() < 100 &&
+             data.actionType in ['read', 'post', 'comment', 'prayer'] &&
+             data.xpReward is int &&
+             data.active is bool &&
+             data.communityId is string;
+    }
+
+    function isValidChallenge(data) {
+      return data.title is string && data.title.size() < 100 &&
+             data.targetGoal is int &&
+             data.currentProgress is int &&
+             data.participants is list &&
+             data.communityId is string;
+    }
+
+    function isValidInsight(data) {
+      return data.type in ['retention', 'engagement', 'growth'] &&
+             data.priority in ['low', 'medium', 'high'] &&
+             data.title is string && data.title.size() < 100 &&
+             data.suggestedAction is string &&
+             data.communityId is string;
+    }
+
+    function isValidPost(data) {
+      return data.authorUid is string &&
+             data.authorName is string &&
+             data.caption is string && data.caption.size() < 2000 &&
+             (!('mediaUrl' in data) || data.mediaUrl is string) &&
+             (!('mediaType' in data) || data.mediaType in ['image', 'video']) &&
+             data.communityId is string;
+    }
+
+    function isValidDiscipleship(data) {
+      return data.mentorUid is string &&
+             data.menteeUid is string &&
+             data.status in ['active', 'completed', 'paused'] &&
+             data.communityId is string;
+    }
+
+    function isValidCheckIn(data) {
+      return data.userUid is string &&
+             data.type in ['emotional', 'spiritual', 'weekly'] &&
+             (!('mood' in data) || data.mood in ['great', 'good', 'neutral', 'bad', 'struggling']) &&
+             data.status is string &&
+             data.communityId is string;
+    }
+
+    function isValidPresence(data) {
+      return data.userUid is string &&
+             data.eventId is string &&
+             data.eventTitle is string &&
+             data.communityId is string;
+    }
+
+    function isValidTimelineEvent(data) {
+      return data.userUid is string &&
+             data.type in ['achievement', 'milestone', 'contribution', 'presence', 'ritual'] &&
+             data.title is string &&
+             data.impactScore is int &&
+             data.communityId is string;
+    }
+
+    function isValidLeaderTask(data) {
+      return data.leaderUid is string &&
+             data.type in ['follow_up', 'encouragement', 'intervention', 'celebration'] &&
+             data.targetUserUid is string &&
+             data.status in ['pending', 'completed', 'dismissed'] &&
+             data.priority in ['low', 'medium', 'high'] &&
+             data.communityId is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isAuthenticated(); // Allow reading profiles for chat/feed
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) &&
+                    ((isOwner(uid) && (request.resource.data.role in ['member', 'Membro'] || isSuperAdmin())) ||
+                     isSecretaria() ||
+                     isAdmin() ||
+                     isSuperAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) &&
+                    ((isOwner(uid) && (request.resource.data.role == resource.data.role || isSuperAdmin())) ||
+                     (isSecretaria() && resource.data.communityId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.communityId) ||
+                     (isAdmin() && resource.data.communityId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.communityId) ||
+                     isSuperAdmin());
+    }
+
+    match /networks/{networkId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    match /global_challenges/{challengeId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    match /communities/{communityId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated(); // Self-service onboarding
+      allow update, delete: if isSuperAdmin() || (isAdmin() && isMemberOf(communityId));
+
+      match /public_messages/{messageId} {
+        allow read: if isMemberOf(communityId);
+        allow create: if isMemberOf(communityId) && request.resource.data.from == request.auth.uid;
+        allow delete: if isAdmin() || (isLeader() && isMemberOf(communityId));
+      }
+
+      match /private_messages/{messageId} {
+        allow read: if isMemberOf(communityId) && (resource.data.from == request.auth.uid || resource.data.to == request.auth.uid);
+        allow create: if isMemberOf(communityId) && request.resource.data.from == request.auth.uid;
+      }
+
+      match /devocionais/{devotionalId} {
+        allow read: if isMemberOf(communityId);
+        allow write: if isAdmin() || isLeader() || (isMemberOf(communityId) && isLeader());
+      }
+
+      match /agenda_events/{eventId} {
+        allow read: if isMemberOf(communityId);
+        allow write: if isAdmin() || isSecretaria() || (isLeader() && isMemberOf(communityId));
+      }
+
+      match /hymns/{hymnId} {
+        allow read: if isMemberOf(communityId);
+        allow write: if isAdmin() || isRegente() || (isLeader() && isMemberOf(communityId));
+      }
+
+      match /transactions/{transactionId} {
+        allow read, write: if isAdmin() || isTesoureiro() || (isLeader() && isMemberOf(communityId) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tesoureiro');
+      }
+
+      match /encouragements/{encouragementId} {
+        allow read: if isMemberOf(communityId) && (resource.data.toUid == request.auth.uid || resource.data.fromUid == request.auth.uid || isAdmin());
+        allow create: if isMemberOf(communityId);
+      }
+
+      match /chat_rooms/{roomId} {
+        allow read: if isMemberOf(communityId) && (resource.data.isCommunityGroup == true || request.auth.uid in resource.data.participants);
+        allow create: if isMemberOf(communityId);
+        allow update: if isMemberOf(communityId) && (resource.data.isCommunityGroup == true || request.auth.uid in resource.data.participants);
+
+        match /messages/{messageId} {
+          allow read: if isMemberOf(communityId) && (get(/databases/$(database)/documents/communities/$(communityId)/chat_rooms/$(roomId)).data.isCommunityGroup == true || request.auth.uid in get(/databases/$(database)/documents/communities/$(communityId)/chat_rooms/$(roomId)).data.participants);
+          allow create: if isMemberOf(communityId) && (get(/databases/$(database)/documents/communities/$(communityId)/chat_rooms/$(roomId)).data.isCommunityGroup == true || request.auth.uid in get(/databases/$(database)/documents/communities/$(communityId)/chat_rooms/$(roomId)).data.participants);
+        }
+      }
+
+      match /internal_posts/{postId} {
+        allow read, write: if isAdmin() || (isLeader() && isMemberOf(communityId));
+      }
+
+      match /posts/{postId} {
+        allow read: if isMemberOf(communityId);
+        allow create: if isMemberOf(communityId) && request.resource.data.authorUid == request.auth.uid && isValidPost(request.resource.data);
+        allow update: if isMemberOf(communityId) && (request.resource.data.authorUid == request.auth.uid || isAdmin()) && isValidPost(request.resource.data);
+        allow delete: if isMemberOf(communityId) && (resource.data.authorUid == request.auth.uid || isAdmin());
+
+        match /comments/{commentId} {
+          allow read: if isMemberOf(communityId);
+          allow create: if isMemberOf(communityId) && request.resource.data.userUid == request.auth.uid;
+          allow update, delete: if isMemberOf(communityId) && (resource.data.userUid == request.auth.uid || isAdmin());
+        }
+      }
+
+      match /rituals/{ritualId} {
+        allow read: if isMemberOf(communityId);
+        allow write: if (isAdmin() || (isLeader() && isMemberOf(communityId))) && isValidRitual(request.resource.data);
+      }
+
+      match /challenges/{challengeId} {
+        allow read: if isMemberOf(communityId);
+        allow write: if (isAdmin() || (isLeader() && isMemberOf(communityId))) && isValidChallenge(request.resource.data);
+        allow update: if isMemberOf(communityId) && request.auth.uid in request.resource.data.participants && isValidChallenge(request.resource.data);
+      }
+
+      match /insights/{insightId} {
+        allow read: if isAdmin() || (isLeader() && isMemberOf(communityId));
+        allow write: if (isAdmin() || (isLeader() && isMemberOf(communityId))) && isValidInsight(request.resource.data);
+      }
+
+      match /discipleships/{discipleshipId} {
+        allow read: if isMemberOf(communityId) && (resource.data.mentorUid == request.auth.uid || resource.data.menteeUid == request.auth.uid || isAdmin() || isLeader());
+        allow write: if (isAdmin() || (isLeader() && isMemberOf(communityId))) && isValidDiscipleship(request.resource.data);
+      }
+
+      match /checkins/{checkinId} {
+        allow read: if isMemberOf(communityId) && (resource.data.userUid == request.auth.uid || isAdmin() || isLeader());
+        allow create: if isMemberOf(communityId) && request.resource.data.userUid == request.auth.uid && isValidCheckIn(request.resource.data);
+        allow update: if isMemberOf(communityId) && (resource.data.userUid == request.auth.uid || isAdmin() || isLeader()) && isValidCheckIn(request.resource.data);
+      }
+
+      match /presences/{presenceId} {
+        allow read: if isMemberOf(communityId);
+        allow create: if isMemberOf(communityId) && request.resource.data.userUid == request.auth.uid && isValidPresence(request.resource.data);
+        allow write: if isAdmin() || isSecretaria() || (isLeader() && isMemberOf(communityId));
+      }
+
+      match /timeline/{eventId} {
+        allow read: if isMemberOf(communityId);
+        allow create: if isMemberOf(communityId) && request.resource.data.userUid == request.auth.uid && isValidTimelineEvent(request.resource.data);
+        allow write: if isAdmin() || (isLeader() && isMemberOf(communityId));
+      }
+
+      match /leader_tasks/{taskId} {
+        allow read: if isAdmin() || (isLeader() && isMemberOf(communityId));
+        allow write: if (isAdmin() || (isLeader() && isMemberOf(communityId))) && isValidLeaderTask(request.resource.data);
+      }
+    }
+  }
+}

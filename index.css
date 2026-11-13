@@ -1,0 +1,29 @@
+:root {
+    --primary-color: #FDB813;
+    --secondary-color: #001220;
+}
+
+.bg-brand-primary {
+    background-color: var(--primary-color);
+}
+
+.text-brand-primary {
+    color: var(--primary-color);
+}
+
+.bg-brand-secondary {
+    background-color: var(--secondary-color);
+}
+
+.text-brand-secondary {
+    color: var(--secondary-color);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.animate-appear {
+    animation: fadeIn 0.5s ease-out forwards;
+}

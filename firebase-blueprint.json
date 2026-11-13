@@ -1,0 +1,465 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with behavioral identity",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "birthday": { "type": "string" },
+        "role": { "type": "string", "enum": ["member", "leader", "regente", "tesoureiro", "secretaria", "admin", "Dono", "SuperAdmin"] },
+        "photo": { "type": "string", "format": "uri" },
+        "communityId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Ativo", "Inativo"] },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "baptismDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "lastSeen": { "type": "string", "format": "date-time" },
+        "lastInteraction": { "type": "string", "format": "date-time" },
+        "interactionCount": { "type": "integer" },
+        "loginCount": { "type": "integer" },
+        "level": { "type": "integer" },
+        "experience": { "type": "integer" },
+        "streak": { "type": "integer" },
+        "badges": { "type": "array", "items": { "type": "string" } },
+        "contributions": {
+          "type": "object",
+          "properties": {
+            "posts": { "type": "integer" },
+            "comments": { "type": "integer" },
+            "likes": { "type": "integer" },
+            "ritualsCompleted": { "type": "integer" }
+          }
+        }
+      },
+      "required": ["uid", "email", "communityId"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction for Treasury",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["entrada", "saida"] },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Hymn": {
+      "title": "Hymn",
+      "description": "Hymn for Regent",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "number": { "type": "string" },
+        "lyrics": { "type": "string" },
+        "youtubeUrl": { "type": "string", "format": "uri" },
+        "communityId": { "type": "string" },
+        "postedBy": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Encouragement": {
+      "title": "Encouragement",
+      "description": "Encouragement message (Boca de Deus)",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "fromUid": { "type": "string" },
+        "fromName": { "type": "string" },
+        "toUid": { "type": "string" },
+        "isAnonymous": { "type": "boolean" },
+        "communityId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ChatRoom": {
+      "title": "ChatRoom",
+      "description": "Chat room for private or group chat",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["group", "private"] },
+        "name": { "type": "string" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "lastMessageAt": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" }
+      }
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Message in a chat room",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string" },
+        "text": { "type": "string" },
+        "senderUid": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderPhoto": { "type": "string", "format": "uri" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" }
+      }
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System notifications",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["devotional", "comment", "like", "birthday", "encouragement", "event"] },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "targetUid": { "type": "string" },
+        "senderUid": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderPhoto": { "type": "string" },
+        "relatedId": { "type": "string" },
+        "read": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "title", "body", "targetUid", "read", "timestamp"]
+    },
+    "Community": {
+      "title": "Community",
+      "description": "Community settings and metadata",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "logo": { "type": "string", "format": "uri" },
+        "primaryColor": { "type": "string" },
+        "secondaryColor": { "type": "string" },
+        "leaderUid": { "type": "string" },
+        "planId": { "type": "string", "enum": ["free", "premium", "enterprise"] },
+        "networkId": { "type": "string" },
+        "subscriptionStatus": { "type": "string", "enum": ["Ativo", "Vencido", "Bloqueado"] },
+        "leaderPin": { "type": "string" },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "allowGlobalRanking": { "type": "boolean" },
+            "allowInterCommunityEvents": { "type": "boolean" },
+            "maxMembers": { "type": "integer" },
+            "features": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "totalMembers": { "type": "integer" },
+            "totalPosts": { "type": "integer" },
+            "totalComments": { "type": "integer" },
+            "totalLikes": { "type": "integer" },
+            "activeUsers7d": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "Network": {
+      "title": "Network",
+      "description": "Network of communities (denomination)",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "logo": { "type": "string", "format": "uri" },
+        "adminUid": { "type": "string" },
+        "communities": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "GlobalChallenge": {
+      "title": "GlobalChallenge",
+      "description": "Challenge across multiple communities",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "targetGoal": { "type": "integer" },
+        "currentProgress": { "type": "integer" },
+        "participatingCommunities": { "type": "array", "items": { "type": "string" } },
+        "rewardBadge": { "type": "string" },
+        "networkId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Devotional": {
+      "title": "Devotional",
+      "description": "Daily devotional content",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "author": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" },
+        "data_postagem": { "type": "string" }
+      }
+    },
+    "AgendaEvent": {
+      "title": "AgendaEvent",
+      "description": "Calendar event",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "start": { "type": "string" },
+        "description": { "type": "string" },
+        "color": { "type": "string" },
+        "allDay": { "type": "boolean" },
+        "communityId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Social feed post",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["normal", "devotional", "event", "announcement", "verse", "encouragement"] },
+        "pinned": { "type": "boolean" },
+        "priority": { "type": "integer" },
+        "isLeaderPost": { "type": "boolean" },
+        "caption": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorPhoto": { "type": "string", "format": "uri" },
+        "authorUid": { "type": "string" },
+        "mediaUrl": { "type": "string", "format": "uri" },
+        "mediaType": { "type": "string", "enum": ["image", "video"] },
+        "metadata": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" },
+        "likes": { "type": "array", "items": { "type": "string" } },
+        "commentCount": { "type": "integer" }
+      }
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "Post comment",
+      "type": "object",
+      "properties": {
+        "postId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string", "format": "uri" },
+        "userUid": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Ritual": {
+      "title": "Ritual",
+      "description": "Daily or weekly recurring activity",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["daily", "weekly"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "actionType": { "type": "string", "enum": ["read", "post", "comment", "prayer"] },
+        "xpReward": { "type": "integer" },
+        "active": { "type": "boolean" },
+        "communityId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Challenge": {
+      "title": "Challenge",
+      "description": "Time-bound community goal",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "targetGoal": { "type": "integer" },
+        "currentProgress": { "type": "integer" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "rewardBadge": { "type": "string" },
+        "communityId": { "type": "string" }
+      }
+    },
+    "LeaderInsight": {
+      "title": "LeaderInsight",
+      "description": "AI-generated actionable insight",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["retention", "engagement", "growth"] },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "suggestedAction": { "type": "string" },
+        "targetUserUid": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" }
+      }
+    },
+    "Discipleship": {
+      "title": "Discipleship",
+      "description": "Mentor-mentee relationship",
+      "type": "object",
+      "properties": {
+        "mentorUid": { "type": "string" },
+        "menteeUid": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "completed", "paused"] },
+        "communityId": { "type": "string" },
+        "lastMeeting": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      }
+    },
+    "CheckIn": {
+      "title": "CheckIn",
+      "description": "User emotional or spiritual check-in",
+      "type": "object",
+      "properties": {
+        "userUid": { "type": "string" },
+        "type": { "type": "string", "enum": ["emotional", "spiritual", "weekly"] },
+        "mood": { "type": "string", "enum": ["great", "good", "neutral", "bad", "struggling"] },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" },
+        "mentorFeedback": { "type": "string" }
+      }
+    },
+    "Presence": {
+      "title": "Presence",
+      "description": "Real-life event participation record",
+      "type": "object",
+      "properties": {
+        "userUid": { "type": "string" },
+        "eventId": { "type": "string" },
+        "eventTitle": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" },
+        "verifiedBy": { "type": "string" }
+      }
+    },
+    "TimelineEvent": {
+      "title": "TimelineEvent",
+      "description": "User history event",
+      "type": "object",
+      "properties": {
+        "userUid": { "type": "string" },
+        "type": { "type": "string", "enum": ["achievement", "milestone", "contribution", "presence", "ritual"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "impactScore": { "type": "integer" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" },
+        "relatedId": { "type": "string" }
+      }
+    },
+    "LeaderTask": {
+      "title": "LeaderTask",
+      "description": "Actionable task for a leader",
+      "type": "object",
+      "properties": {
+        "leaderUid": { "type": "string" },
+        "type": { "type": "string", "enum": ["follow_up", "encouragement", "intervention", "celebration"] },
+        "targetUserUid": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "dismissed"] },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "communityId": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "System notifications"
+    },
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/communities/{communityId}": {
+      "schema": "Community",
+      "description": "Community settings"
+    },
+    "/communities/{communityId}/devocionais/{devotionalId}": {
+      "schema": "Devotional",
+      "description": "Devotionals"
+    },
+    "/communities/{communityId}/agenda_events/{eventId}": {
+      "schema": "AgendaEvent",
+      "description": "Agenda events"
+    },
+    "/communities/{communityId}/posts/{postId}": {
+      "schema": "Post",
+      "description": "Social feed posts"
+    },
+    "/communities/{communityId}/posts/{postId}/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Post comments"
+    },
+    "/communities/{communityId}/rituals/{ritualId}": {
+      "schema": "Ritual",
+      "description": "Daily/Weekly rituals"
+    },
+    "/communities/{communityId}/challenges/{challengeId}": {
+      "schema": "Challenge",
+      "description": "Community challenges"
+    },
+    "/communities/{communityId}/insights/{insightId}": {
+      "schema": "LeaderInsight",
+      "description": "AI-generated insights for leaders"
+    },
+    "/communities/{communityId}/discipleships/{discipleshipId}": {
+      "schema": "Discipleship",
+      "description": "Discipleship relationships"
+    },
+    "/communities/{communityId}/checkins/{checkinId}": {
+      "schema": "CheckIn",
+      "description": "User check-ins"
+    },
+    "/communities/{communityId}/presences/{presenceId}": {
+      "schema": "Presence",
+      "description": "Event presence records"
+    },
+    "/communities/{communityId}/timeline/{eventId}": {
+      "schema": "TimelineEvent",
+      "description": "User history events"
+    },
+    "/communities/{communityId}/leader_tasks/{taskId}": {
+      "schema": "LeaderTask",
+      "description": "Leader actionable tasks"
+    },
+    "/communities/{communityId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Financial transactions"
+    },
+    "/communities/{communityId}/hymns/{hymnId}": {
+      "schema": "Hymn",
+      "description": "Hymns"
+    },
+    "/communities/{communityId}/encouragements/{encouragementId}": {
+      "schema": "Encouragement",
+      "description": "Encouragement messages"
+    },
+    "/communities/{communityId}/chat_rooms/{roomId}": {
+      "schema": "ChatRoom",
+      "description": "Chat rooms"
+    },
+    "/communities/{communityId}/chat_rooms/{roomId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Chat messages"
+    },
+    "/networks/{networkId}": {
+      "schema": "Network",
+      "description": "Networks of communities"
+    },
+    "/global_challenges/{challengeId}": {
+      "schema": "GlobalChallenge",
+      "description": "Global challenges"
+    }
+  }
+}

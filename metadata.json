@@ -1,0 +1,7 @@
+{
+  "name": "Portal UMADW - Juventude",
+  "description": "Aplicativo oficial da Juventude UMADW com Agenda, Devocionais, Bíblia Falada, Chat e Comunidade.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

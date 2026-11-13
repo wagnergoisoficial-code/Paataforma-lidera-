@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal UMADW - Juventude</title>
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], brand: ['Montserrat', 'sans-serif'] },
+                    colors: { 
+                        primary: 'var(--primary-color, #FDB813)', 
+                        dark: 'var(--secondary-color, #001220)' 
+                    },
+                    animation: { 
+                        'appear': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                        'bounce-slow': 'bounce 2s infinite'
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        bounce: {
+                          '0%, 100%': { transform: 'translateY(-5%)', animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)' },
+                          '50%': { transform: 'translateY(0)', animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FullCalendar CDN -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    
+    <style>
+        body { background-color: #F8FAFC; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* FullCalendar Customization */
+        :root {
+            --fc-border-color: rgba(255,255,255,0.1);
+            --fc-button-bg-color: var(--primary-color, #FDB813);
+            --fc-button-border-color: var(--primary-color, #FDB813);
+            --fc-button-text-color: var(--secondary-color, #001220);
+            --fc-button-hover-bg-color: var(--primary-color, #FDB813);
+            --fc-button-hover-border-color: var(--primary-color, #FDB813);
+            --fc-button-active-bg-color: var(--primary-color, #FDB813);
+            --fc-button-active-border-color: var(--primary-color, #FDB813);
+            --fc-today-bg-color: rgba(253, 184, 19, 0.1) !important;
+            --fc-page-bg-color: var(--secondary-color, #001220);
+            --fc-neutral-bg-color: rgba(255,255,255,0.05);
+            --fc-list-event-hover-bg-color: rgba(253, 184, 19, 0.1);
+        }
+        .fc { color: white; font-family: 'Inter', sans-serif; }
+        .fc-toolbar-title { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; font-size: 1.2rem !important; color: var(--primary-color, #FDB813); }
+        .fc-col-header-cell-cushion { color: var(--primary-color, #FDB813); text-transform: uppercase; font-size: 0.75rem; font-weight: 800; }
+        .fc-daygrid-day-number { color: rgba(255,255,255,0.7); font-weight: 600; text-decoration: none !important; }
+        .fc-list-day-cushion { background-color: var(--secondary-color, #001220) !important; }
+        .fc-list-day-text, .fc-list-day-side-text { color: var(--primary-color, #FDB813) !important; font-family: 'Montserrat', sans-serif; font-weight: 800; }
+        .fc-list-event:hover td { background-color: rgba(255,255,255,0.05) !important; }
+        .fc-list-event-title { color: white !important; font-weight: 600; }
+        .fc-list-event-time { color: rgba(255,255,255,0.6) !important; }
+        .fc-popover { background-color: var(--secondary-color, #001220) !important; border: 1px solid rgba(255,255,255,0.2) !important; z-index: 9999; }
+        .fc-popover-header { background-color: var(--primary-color, #FDB813) !important; color: var(--secondary-color, #001220) !important; font-weight: bold; }
+        .fc-more-link { color: var(--primary-color, #FDB813) !important; font-weight: bold; }
+        .fc-button { font-weight: 900 !important; text-transform: uppercase; font-size: 0.7rem !important; letter-spacing: 0.05em; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "firebase/": "https://esm.sh/firebase@^12.8.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="text-slate-800 antialiased">
+    <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
